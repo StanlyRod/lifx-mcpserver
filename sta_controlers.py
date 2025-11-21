@@ -21,7 +21,7 @@ async def fetch_url(url: str, headers: dict[str, str], payload: dict[str, Any], 
             logging.error(f"HTTP error occurred: {e}")
             return f"Failed to toggle the {bulb_name} bulb: {e}"
 
-
+#toggle bedroom bulb
 async def bedroom_bulb(duration: int = 0) -> str:
     duration = int(duration) if duration else 0
     
@@ -32,6 +32,7 @@ async def bedroom_bulb(duration: int = 0) -> str:
     payload = {"duration": duration}
     bulb_name = "label:Bedroom"
 
+    #lifx endpoint
     url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
 
     headers = {
@@ -42,7 +43,7 @@ async def bedroom_bulb(duration: int = 0) -> str:
     fetch_response = await fetch_url(url, headers, payload, "Bedroom")
     return fetch_response
 
-
+#toggle restroom bulb
 async def restroom_bulb(duration: int = 0) -> str:
     duration = int(duration) if duration else 0
     
@@ -53,12 +54,13 @@ async def restroom_bulb(duration: int = 0) -> str:
     payload = {"duration": duration}
     bulb_name = "label:Restroom"
     
+    #lifx endpoint
     url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
 
     headers = {
         "Authorization": f"Bearer {lfx}",
         "Content-Type": "application/json"
     }
-
+    
     fetch_response = await fetch_url(url, headers, payload, "Restroom")
     return fetch_response
