@@ -39,6 +39,20 @@ async def toggle_restroom_light_bulb(duration: int = 0) -> str:
     response_rb = await stc.restroom_bulb(duration)
     return response_rb
 
+@mcp.tool()
+async def toggle_sweep_all_bulbs(duration: float = 0.0) -> str:
+    """
+    Toggle all LIFX lights on or off asynchronously.
+    
+    Parameters
+    ----------
+    duration : float, optional
+        Fade duration in seconds (0-100). Defaults to 0.0.
+    """
+
+    response_sb = await stc.sweep_all_bulbs(duration)
+    return response_sb
+
 def main():
     mcp.run(transport='stdio')
 
