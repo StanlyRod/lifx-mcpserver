@@ -53,6 +53,22 @@ async def toggle_sweep_all_bulbs(duration: float = 0.0) -> str:
     response_sb = await stc.sweep_all_bulbs(duration)
     return response_sb
 
+@mcp.tool()
+async def set_bulb_brightness(intensity: int, bulb_name: str) -> str:
+    """
+    Set the brightness of a specified LIFX bulb asynchronously.
+    
+    Parameters
+    ----------
+    intensity : int
+        Brightness level (0-100).
+    bulb_name : str
+        Name or label of the bulb to set brightness for.
+    """
+
+    response_bright = await stc.brightness_bulb(intensity, bulb_name)
+    return response_bright
+
 def main():
     mcp.run(transport='stdio')
 

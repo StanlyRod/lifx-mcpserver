@@ -10,10 +10,10 @@ load_dotenv()
 lfx = os.getenv("LIFXKEY")
 
 # Asynchronously POST a JSON payload to a URL and log any HTTP errors.
-async def fetch_url(url: str, headers: dict[str, str], payload: dict[str, Any], bulb_name: str) -> str:
+async def fetch_url(method: str, url: str, headers: dict[str, str], payload: dict[str, Any], bulb_name: str) -> str:
     async with httpx.AsyncClient() as client:
         try:
-           response = await client.post(url, headers=headers, json=payload, timeout=20)
+           response = await client.request(method, url, headers=headers, json=payload, timeout=20)
            response.raise_for_status()
            return f"The {bulb_name} bulb toggled successfully"
         
@@ -52,7 +52,7 @@ async def bedroom_bulb(duration: int = 0) -> str:
         "Content-Type": "application/json"
     }
 
-    fetch_response = await fetch_url(url, headers, payload, "Bedroom")
+    fetch_response = await fetch_url("POST", url, headers, payload, "Bedroom")
     return fetch_response
 
 
@@ -75,7 +75,7 @@ async def restroom_bulb(duration: int = 0) -> str:
         "Content-Type": "application/json"
     }
     
-    fetch_response = await fetch_url(url, headers, payload, "Restroom")
+    fetch_response = await fetch_url("POST", url, headers, payload, "Restroom")
     return fetch_response
 
 
@@ -98,6 +98,32 @@ async def sweep_all_bulbs(duration: float = 0.0) -> str:
         "Content-Type": "application/json"
     }
 
-    fetch_response = await fetch_url(url, headers, payload, "All bulbs")
+    fetch_response = await fetch_url("POST", url, headers, payload, "All bulbs")
     return fetch_response
 
+# Set bulb brightness
+async def brightness_bulb(intensity: int, bulb_name: str) -> str:
+    # Input validation: Ensure intensity is between 0% and 100%
+    if intensity < 0 or intensity > 100:
+        raise ValueError("Error the brightness level have to be set between 0 and 100")
+    
+    brightness_level = intensity / 100.0
+
+    selected_bulb_name = f"label:{bulb_name}"
+
+    headers = {
+        "Authorization": f"Bearer {lfx}",
+        "Content-Type": "application/json"
+    }
+
+    # Dictionary payload (equivalent to anonymous object)
+    payload = {
+        "brightness": brightness_level
+    }
+    
+    # API endpoint
+    url = f"https://api.lifx.com/v1/lights/{selected_bulb_name}/state"
+
+    fetch_response = await fetch_url("PUT", url, headers, payload, bulb_name)
+    return fetch_response
+    
