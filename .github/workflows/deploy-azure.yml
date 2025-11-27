@@ -8,7 +8,7 @@ on:
 env:
   IMAGE_NAME: stamcpserver-dockerimage
   CONTAINER_APP_NAME: sta-test-mcpserver
-  CONTAINER_APP_PORT: 3131
+ 
 
 jobs:
   build-and-deploy:
@@ -45,7 +45,6 @@ jobs:
           --name ${{ env.CONTAINER_APP_NAME }} \
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --image ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-          --target-port ${{ env.CONTAINER_APP_PORT }} \
           --set-env-vars LIFX=${{ secrets.LIFXKEY }}
     
     - name: Deployment Summary
