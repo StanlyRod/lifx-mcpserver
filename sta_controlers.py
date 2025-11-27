@@ -9,7 +9,7 @@ load_dotenv()
 
 lfx = os.getenv("LIFXKEY")
 
-# Asynchronously POST a JSON payload to a URL and log any HTTP errors.
+# Asynchronously POST a JSON payload to a URL and log any HTTP errors..
 async def fetch_url(method: str, url: str, headers: dict[str, str], payload: dict[str, Any], bulb_name: str) -> str:
     async with httpx.AsyncClient() as client:
         try:
