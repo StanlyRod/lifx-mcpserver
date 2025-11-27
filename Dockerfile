@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY sta_controlers.py .
-COPY stamcp.py .
+COPY staremotemcp.py .
 
 # Expose port
 EXPOSE 3131
