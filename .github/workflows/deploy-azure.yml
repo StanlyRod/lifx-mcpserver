@@ -1,1 +1,57 @@
+name: Deploy STA MCP Server to Azure 
 
+on:
+  push:
+    branches:
+      - master
+
+env:
+  IMAGE_NAME: stamcpserver-dockerimage
+  CONTAINER_APP_NAME: sta-test-mcpserver
+  CONTAINER_APP_PORT: 3131
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+    
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy to Azure Container App
+      run: |
+        az containerapp update \
+          --name ${{ env.CONTAINER_APP_NAME }} \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --image ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --target-port ${{ env.CONTAINER_APP_PORT }} \
+          --set-env-vars LIFX=${{ secrets.LIFXKEY }}
+    
+    - name: Deployment Summary
+      run: |
+        echo "✅ Deployment completed successfully!"
+        echo "📦 Image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        echo "🚀 Container App: ${{ env.CONTAINER_APP_NAME }}"
+        echo "🌐 Port: ${{ env.CONTAINER_APP_PORT }}"
+        echo "🔐 Env: LIFX set from GitHub secret"

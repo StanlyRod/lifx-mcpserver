@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY sta_controlers.py .
 COPY stamcp.py .
 
-# Expose port for SSE transport
+# Expose port
 EXPOSE 3131
 
 # Run the MCP server
