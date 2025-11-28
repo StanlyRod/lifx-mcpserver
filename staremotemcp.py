@@ -3,6 +3,7 @@ import logging
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 import sta_controlers as stc
+import sys
 
 load_dotenv()
 
@@ -65,6 +66,22 @@ async def set_bulb_brightness(intensity: int, bulb_name: str) -> str:
     response_bright = await stc.brightness_bulb(intensity, bulb_name)
     return response_bright
 
+@mcp.tool()
+async def set_bulb_color(color: str, bulb_name: str) -> str:
+    """
+    Set the color of a specified LIFX bulb asynchronously.
+    
+    Parameters
+    ----------
+    color : str
+        Color value (e.g., "red", "blue", "hue:120 saturation:1.0 brightness:1.0").
+    bulb_name : str
+        Name or label of the bulb to set color for.
+    """
+
+    response_color = await stc.bulb_color(color, bulb_name)
+    return response_color
+
 def main():
     mcp.run(transport="streamable-http")
 
@@ -75,3 +92,4 @@ if __name__ == "__main__":
         logging.info("Shutting down STA MCP server...")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+        sys.exit(1)
