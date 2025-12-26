@@ -52,5 +52,4 @@ jobs:
         echo "✅ Deployment completed successfully!"
         echo "📦 Image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
         echo "🚀 Container App: ${{ env.CONTAINER_APP_NAME }}"
-        echo "🌐 Port: ${{ env.CONTAINER_APP_PORT }}"
         echo "🔐 Env: LIFX set from GitHub secret"
