@@ -10,31 +10,52 @@ load_dotenv()
 mcp = FastMCP(name="sta-mcpserver", host="0.0.0.0", port=3131, stateless_http=True, json_response=True)
 
 @mcp.tool()
-async def toggle_bedroom_light_bulb(duration: int = 0) -> str:
+async def turn_bedroom_light_on(duration: int = 0) -> str:
     """
-    Toggle the bedroom LIFX light on or off asynchronously.
+    Turn the bedroom LIFX light ON.
     
     Parameters
     ----------
     duration : int, optional
         Fade duration in seconds (0-100). Defaults to 0.
     """
-    response_bb = await stc.bedroom_bulb(duration)
-    return response_bb
+    return await stc.bulb_on("Bedroom", duration)
 
 @mcp.tool()
-async def toggle_restroom_light_bulb(duration: int = 0) -> str:
+async def turn_bedroom_light_off(duration: int = 0) -> str:
     """
-    Toggle the restroom LIFX light on or off asynchronously.
+    Turn the bedroom LIFX light OFF.
     
     Parameters
     ----------
     duration : int, optional
         Fade duration in seconds (0-100). Defaults to 0.
     """
+    return await stc.bulb_off("Bedroom", duration)
 
-    response_rb = await stc.restroom_bulb(duration)
-    return response_rb
+@mcp.tool()
+async def turn_restroom_light_on(duration: int = 0) -> str:
+    """
+    Turn the restroom LIFX light ON.
+    
+    Parameters
+    ----------
+    duration : int, optional
+        Fade duration in seconds (0-100). Defaults to 0.
+    """
+    return await stc.bulb_on("Restroom", duration)
+
+@mcp.tool()
+async def turn_restroom_light_off(duration: int = 0) -> str:
+    """
+    Turn the restroom LIFX light OFF.
+    
+    Parameters
+    ----------
+    duration : int, optional
+        Fade duration in seconds (0-100). Defaults to 0.
+    """
+    return await stc.bulb_off("Restroom", duration)
 
 @mcp.tool()
 async def toggle_sweep_all_bulbs(duration: float = 0.0) -> str:

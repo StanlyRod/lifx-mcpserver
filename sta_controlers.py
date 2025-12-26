@@ -33,50 +33,88 @@ async def fetch_url(method: str, url: str, headers: dict[str, str], payload: dic
             return f"An unexpected error occurred while performing the action on {bulb_name} bulb."
 
 
-#toggle bedroom bulb
-async def bedroom_bulb(duration: int = 0) -> str:
+# Turn a specific bulb ON
+async def bulb_on(bulb_name: str, duration: int = 0) -> str:
     duration = int(duration) if duration else 0
     
-    # Input validation
     if duration < 0 or duration > 100:
         raise ValueError("Error: duration must be between 0 and 100 seconds")
 
-    payload = {"duration": duration}
-    bulb_name = "label:Bedroom"
-
-    #lifx endpoint
-    url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
+    payload = {"power": "on", "duration": duration}
+    selected_bulb = f"label:{bulb_name.capitalize()}"
+    url = f"https://api.lifx.com/v1/lights/{selected_bulb}/state"
 
     headers = {
         "Authorization": f"Bearer {lfx}",
         "Content-Type": "application/json"
     }
 
-    fetch_response = await fetch_url("POST", url, headers, payload, "Bedroom")
-    return fetch_response
+    return await fetch_url("PUT", url, headers, payload, bulb_name.capitalize())
 
 
-#toggle restroom bulb
-async def restroom_bulb(duration: int = 0) -> str:
+# Turn a specific bulb OFF
+async def bulb_off(bulb_name: str, duration: int = 0) -> str:
     duration = int(duration) if duration else 0
     
-    # Input validation
     if duration < 0 or duration > 100:
         raise ValueError("Error: duration must be between 0 and 100 seconds")
 
-    payload = {"duration": duration}
-    bulb_name = "label:Restroom"
-    
-    #lifx endpoint
-    url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
+    payload = {"power": "off", "duration": duration}
+    selected_bulb = f"label:{bulb_name.capitalize()}"
+    url = f"https://api.lifx.com/v1/lights/{selected_bulb}/state"
 
     headers = {
         "Authorization": f"Bearer {lfx}",
         "Content-Type": "application/json"
     }
+
+    return await fetch_url("PUT", url, headers, payload, bulb_name.capitalize())
+
+
+# #toggle bedroom bulb
+# async def bedroom_bulb(duration: int = 0) -> str:
+#     duration = int(duration) if duration else 0
     
-    fetch_response = await fetch_url("POST", url, headers, payload, "Restroom")
-    return fetch_response
+#     # Input validation
+#     if duration < 0 or duration > 100:
+#         raise ValueError("Error: duration must be between 0 and 100 seconds")
+
+#     payload = {"duration": duration}
+#     bulb_name = "label:Bedroom"
+
+#     #lifx endpoint
+#     url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
+
+#     headers = {
+#         "Authorization": f"Bearer {lfx}",
+#         "Content-Type": "application/json"
+#     }
+
+#     fetch_response = await fetch_url("POST", url, headers, payload, "Bedroom")
+#     return fetch_response
+
+
+# #toggle restroom bulb
+# async def restroom_bulb(duration: int = 0) -> str:
+#     duration = int(duration) if duration else 0
+    
+#     # Input validation
+#     if duration < 0 or duration > 100:
+#         raise ValueError("Error: duration must be between 0 and 100 seconds")
+
+#     payload = {"duration": duration}
+#     bulb_name = "label:Restroom"
+    
+#     #lifx endpoint
+#     url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
+
+#     headers = {
+#         "Authorization": f"Bearer {lfx}",
+#         "Content-Type": "application/json"
+#     }
+    
+#     fetch_response = await fetch_url("POST", url, headers, payload, "Restroom")
+#     return fetch_response
 
 
 #toggle sweep bulb
@@ -110,7 +148,7 @@ async def brightness_bulb(intensity: int, bulb_name: str) -> str:
     
     brightness_level = intensity / 100.0
 
-    selected_bulb_name = f"label:{bulb_name}"
+    selected_bulb_name = f"label:{bulb_name.capitalize()}"
 
     headers = {
         "Authorization": f"Bearer {lfx}",
@@ -135,7 +173,7 @@ async def bulb_color(color_value: str, bulb_name: str) -> str:
     if not color_value or color_value.strip() == "":
         raise ValueError("Error: color_value argument is required.")
     
-    selected_bulb_name = f"label:{bulb_name}"
+    selected_bulb_name = f"label:{bulb_name.capitalize()}"
 
     # Build payload
     payload = {
