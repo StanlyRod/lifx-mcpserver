@@ -6,7 +6,7 @@ import logging
 import os
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
-import sta_controlers as stc
+import lfx_controlers as stc
 
 load_dotenv()
 
@@ -60,33 +60,6 @@ async def turn_restroom_light_off(duration: int = 0) -> str:
     """
     return await stc.bulb_off("Restroom", duration)
 
-
-# @mcp.tool()
-# async def toggle_bedroom_light_bulb(duration: int = 0) -> str:
-#     """
-#     Toggle the bedroom LIFX light on or off asynchronously.
-    
-#     Parameters
-#     ----------
-#     duration : int, optional
-#         Fade duration in seconds (0-100). Defaults to 0.
-#     """
-#     response_bb = await stc.bedroom_bulb(duration)
-#     return response_bb
-
-# @mcp.tool()
-# async def toggle_restroom_light_bulb(duration: int = 0) -> str:
-#     """
-#     Toggle the restroom LIFX light on or off asynchronously.
-    
-#     Parameters
-#     ----------
-#     duration : int, optional
-#         Fade duration in seconds (0-100). Defaults to 0.
-#     """
-
-#     response_rb = await stc.restroom_bulb(duration)
-#     return response_rb
 
 @mcp.tool()
 async def toggle_sweep_all_bulbs(duration: float = 0.0) -> str:

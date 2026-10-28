@@ -5,32 +5,61 @@ import os
 from dotenv import load_dotenv
 import asyncio
 
+logger = logging.getLogger(__name__)
+
+# Shared HTTP client
+_http_client: httpx.AsyncClient | None = None
+
 load_dotenv()
 
-lfx = os.getenv("LIFXKEY")
+lfx = (os.getenv("LIFXKEY") or "").strip()
+if not lfx:
+    raise RuntimeError(
+        "LIFXKEY is required. Set it in the environment or in a .env file "
+        "before starting the server."
+    )
 
-# Asynchronously httprequest a JSON payload to a URL and log any HTTP errors..
+def get_http_client() -> httpx.AsyncClient:
+    global _http_client
+
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(timeout=httpx.Timeout(20.0), limits=httpx.Limits(max_connections=10, max_keepalive_connections=5, keepalive_expiry=30.0))
+
+    return _http_client
+
+
+async def close_http_client() -> None:
+    global _http_client
+
+    if _http_client is not None:
+        await _http_client.aclose()
+        _http_client = None
+
+
+# Send an asynchronous LIFX request and report failures.
 async def fetch_url(method: str, url: str, headers: dict[str, str], payload: dict[str, Any], bulb_name: str) -> str:
-    async with httpx.AsyncClient() as client:
-        try:
-           response = await client.request(method, url, headers=headers, json=payload, timeout=20)
-           response.raise_for_status()
-           return f"The {bulb_name} bulb action was successfully"
-        
-        except httpx.HTTPStatusError as e:
-            logging.error(f"HTTP error occurred: {e}")
-            return f"Failed to perform the action on {bulb_name} bulb: {e}"
-        except httpx.ConnectTimeout as e:
-            logging.error(f"Connection timeout for {bulb_name}: {e}")
-            return f"Failed to perfom the action on {bulb_name} bulb: connection timeout."
-        except httpx.TimeoutException as e:
-            # Covers all timeout types
-            logging.error(f"General timeout for {bulb_name}: {e}")
-            return f"Failed to perform the action on {bulb_name} bulb: request timed out."
-        except Exception as e:
-            # Last-resort catch-all for unexpected errors
-            logging.error(f"Unexpected error for {bulb_name}: {e}")
-            return f"An unexpected error occurred while performing the action on {bulb_name} bulb."
+    try:
+        client = get_http_client()
+        response = await client.request(method=method, url=url, headers=headers, json=payload)
+        response.raise_for_status()
+        logger.info("LIFX request succeeded | bulb=%s | status=%s", bulb_name, response.status_code)
+        return f"Successfully performed action on {bulb_name} bulb."
+
+    except httpx.HTTPStatusError as e:
+        logger.error("LIFX HTTP error | bulb=%s | status=%s", bulb_name, e.response.status_code)
+        return f"Failed to control {bulb_name}: HTTP {e.response.status_code}"
+
+    except httpx.TimeoutException:
+        logger.error("LIFX timeout | bulb=%s", bulb_name)
+        return f"Failed to control {bulb_name}: timeout."
+
+    except httpx.RequestError as e:
+        logger.error("LIFX network error | bulb=%s | type=%s", bulb_name, type(e).__name__)
+        return f"Failed to control {bulb_name}: network error."
+
+    except Exception:
+        logger.exception("Unexpected LIFX error | bulb=%s", bulb_name)
+        return f"Unexpected error controlling {bulb_name}."
 
 
 # Turn a specific bulb ON
@@ -69,52 +98,6 @@ async def bulb_off(bulb_name: str, duration: int = 0) -> str:
     }
 
     return await fetch_url("PUT", url, headers, payload, bulb_name.capitalize())
-
-
-# #toggle bedroom bulb
-# async def bedroom_bulb(duration: int = 0) -> str:
-#     duration = int(duration) if duration else 0
-    
-#     # Input validation
-#     if duration < 0 or duration > 100:
-#         raise ValueError("Error: duration must be between 0 and 100 seconds")
-
-#     payload = {"duration": duration}
-#     bulb_name = "label:Bedroom"
-
-#     #lifx endpoint
-#     url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
-
-#     headers = {
-#         "Authorization": f"Bearer {lfx}",
-#         "Content-Type": "application/json"
-#     }
-
-#     fetch_response = await fetch_url("POST", url, headers, payload, "Bedroom")
-#     return fetch_response
-
-
-# #toggle restroom bulb
-# async def restroom_bulb(duration: int = 0) -> str:
-#     duration = int(duration) if duration else 0
-    
-#     # Input validation
-#     if duration < 0 or duration > 100:
-#         raise ValueError("Error: duration must be between 0 and 100 seconds")
-
-#     payload = {"duration": duration}
-#     bulb_name = "label:Restroom"
-    
-#     #lifx endpoint
-#     url = f"https://api.lifx.com/v1/lights/{bulb_name}/toggle"
-
-#     headers = {
-#         "Authorization": f"Bearer {lfx}",
-#         "Content-Type": "application/json"
-#     }
-    
-#     fetch_response = await fetch_url("POST", url, headers, payload, "Restroom")
-#     return fetch_response
 
 
 #toggle sweep bulb

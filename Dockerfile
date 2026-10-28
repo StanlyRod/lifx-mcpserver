@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -16,11 +16,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY sta_controlers.py .
-COPY staremotemcp.py .
+COPY lfx_controlers.py .
+COPY lfxremotemcp.py .
 
 # Expose port
 EXPOSE 3131
 
 # Run the MCP server
-CMD ["python", "staremotemcp.py"]
+CMD ["python", "lfxremotemcp.py"]
