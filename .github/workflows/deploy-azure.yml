@@ -1,4 +1,4 @@
-name: Deploy STA MCP Server to Azure 
+name: Deploy LFX MCP Server to Azure
 
 on:
   push:
@@ -8,24 +8,24 @@ on:
 env:
   IMAGE_NAME: stamcpserver-dockerimage
   CONTAINER_APP_NAME: sta-test-mcpserver
- 
+
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@v5
+
     - name: Log in to Docker Hub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v4
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    
+
     - name: Build and push Docker image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v7
       with:
         context: .
         file: ./Dockerfile
@@ -33,12 +33,12 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
           ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-    
+
     - name: Azure Login
-      uses: azure/login@v1
+      uses: azure/login@v3
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
+
     - name: Deploy to Azure Container App
       run: |
         az containerapp update \
@@ -46,7 +46,7 @@ jobs:
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --image ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
           --set-env-vars LIFX=${{ secrets.LIFXKEY }}
-    
+
     - name: Deployment Summary
       run: |
         echo "✅ Deployment completed successfully!"
