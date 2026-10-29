@@ -7,65 +7,59 @@ import sys
 
 load_dotenv()
 
-mcp = FastMCP(name="sta-mcpserver", host="0.0.0.0", port=3131, stateless_http=True, json_response=True)
+mcp = FastMCP(name="lifx-mcpserver", host="0.0.0.0", port=3131, stateless_http=True, json_response=True)
 
 @mcp.tool()
 async def turn_bedroom_light_on(duration: int = 0) -> str:
-    """
-    Turn the bedroom LIFX light ON.
-    
-    Parameters
-    ----------
-    duration : int, optional
-        Fade duration in seconds (0-100). Defaults to 0.
+    """Turn on the LIFX light labeled Bedroom.
+
+    Use when the user asks to turn on the bedroom light.
+    duration: Fade time in whole seconds, from 0 to 100.
+    Defaults to 0 for an immediate change.
     """
     return await stc.bulb_on("Bedroom", duration)
 
 @mcp.tool()
 async def turn_bedroom_light_off(duration: int = 0) -> str:
-    """
-    Turn the bedroom LIFX light OFF.
-    
-    Parameters
-    ----------
-    duration : int, optional
-        Fade duration in seconds (0-100). Defaults to 0.
+    """Turn off the LIFX light labeled Bedroom.
+
+    Use when the user asks to turn off the bedroom light.
+    duration: Fade time in whole seconds, from 0 to 100.
+    Defaults to 0 for an immediate change.
     """
     return await stc.bulb_off("Bedroom", duration)
 
 @mcp.tool()
 async def turn_restroom_light_on(duration: int = 0) -> str:
-    """
-    Turn the restroom LIFX light ON.
-    
-    Parameters
-    ----------
-    duration : int, optional
-        Fade duration in seconds (0-100). Defaults to 0.
+    """Turn on the LIFX light labeled Restroom.
+
+    Use when the user asks to turn on the restroom light.
+    duration: Fade time in whole seconds, from 0 to 100.
+    Defaults to 0 for an immediate change.
     """
     return await stc.bulb_on("Restroom", duration)
 
 @mcp.tool()
 async def turn_restroom_light_off(duration: int = 0) -> str:
-    """
-    Turn the restroom LIFX light OFF.
-    
-    Parameters
-    ----------
-    duration : int, optional
-        Fade duration in seconds (0-100). Defaults to 0.
+    """Turn off the LIFX light labeled Restroom.
+
+    Use when the user asks to turn off the restroom light.
+    duration: Fade time in whole seconds, from 0 to 100.
+    Defaults to 0 for an immediate change.
     """
     return await stc.bulb_off("Restroom", duration)
 
 @mcp.tool()
 async def toggle_sweep_all_bulbs(duration: float = 0.0) -> str:
-    """
-    Toggle all LIFX lights on or off asynchronously.
-    
-    Parameters
-    ----------
-    duration : float, optional
-        Fade duration in seconds (0-100). Defaults to 0.0.
+    """Toggle power for all LIFX lights accessible to this API key.
+
+    Use only when the user explicitly requests toggling all lights.
+    This affects all lights, including lights outside Bedroom and Restroom.
+    Do not use for requests to explicitly turn all lights on or off,
+    because toggling does not guarantee that requested final state.
+
+    duration: Fade time in seconds, from 0 to 100.
+    Fractional seconds are allowed. Defaults to 0 for an immediate change.
     """
 
     response_sb = await stc.sweep_all_bulbs(duration)
@@ -73,15 +67,16 @@ async def toggle_sweep_all_bulbs(duration: float = 0.0) -> str:
 
 @mcp.tool()
 async def set_bulb_brightness(intensity: int, bulb_name: str) -> str:
-    """
-    Set the brightness of a specified LIFX bulb asynchronously.
-    
-    Parameters
-    ----------
-    intensity : int
-        Brightness level (0-100).
-    bulb_name : str
-        Name or label of the bulb to set brightness for.
+    """Set the brightness percentage of one named LIFX light.
+
+    Use when the user asks to brighten, dim, or set a light's brightness.
+    intensity: Whole-number percentage from 0 to 100.
+    For example, pass 50 for 50% brightness.
+    bulb_name: Light label, such as Bedroom or Restroom.
+    Supply the label alone, without a 'label:' prefix.
+    Ask which light if the target cannot be determined from context.
+
+    This tool changes brightness; it does not explicitly set power.
     """
 
     response_bright = await stc.brightness_bulb(intensity, bulb_name)
@@ -89,15 +84,17 @@ async def set_bulb_brightness(intensity: int, bulb_name: str) -> str:
 
 @mcp.tool()
 async def set_bulb_color(color: str, bulb_name: str) -> str:
-    """
-    Set the color of a specified LIFX bulb asynchronously.
-    
-    Parameters
-    ----------
-    color : str
-        Color value (e.g., "red", "blue", "hue:120 saturation:1.0 brightness:1.0").
-    bulb_name : str
-        Name or label of the bulb to set color for.
+    """Set the color of one named LIFX light.
+
+    Use when the user asks to change a light's color.
+    color: Nonempty LIFX color string, such as 'red', 'blue',
+    or 'hue:120 saturation:1.0 brightness:1.0'.
+    bulb_name: Light label, such as Bedroom or Restroom.
+    Supply the label alone, without a 'label:' prefix.
+    Ask which light if the target cannot be determined from context.
+
+    This tool does not explicitly set power. A color string containing
+    brightness also changes brightness.
     """
 
     response_color = await stc.bulb_color(color, bulb_name)
@@ -110,7 +107,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        logging.info("Shutting down STA MCP server...")
+        logging.info("Shutting down lifx MCP server...")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         sys.exit(1)
