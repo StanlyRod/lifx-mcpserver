@@ -77,7 +77,20 @@ Errors are returned as text rather than crashing the server. Out-of-range inputs
 - A LIFX account with your bulbs set up
 - A LIFX personal access token. Create one at [cloud.lifx.com](https://cloud.lifx.com) under **Settings → Personal access tokens**.
 
-Main libraries: `mcp` (the MCP framework, using FastMCP), `httpx` (sends the web requests), and `python-dotenv` (loads your token from a `.env` file).
+Main libraries: `mcp` v2 (the MCP framework, using `MCPServer`), `httpx` (sends the LIFX web requests), and `python-dotenv` (loads your token from a `.env` file). The SDK uses `httpx2` internally; both HTTP libraries are installed because the LIFX controller still uses `httpx`.
+
+The dependency versions are locked in `uv.lock` and exported with hashes to `requirements.txt` for Docker:
+
+| Package | Locked version |
+|---|---|
+| `mcp` | 2.3.0 |
+| `requests` | 2.34.2 |
+| `pydantic` | 2.14.1 |
+| `python-dotenv` | 1.2.4 |
+| `starlette` | 1.10.0 |
+| `uvicorn` | 0.54.0 |
+| `cryptography` | 50.0.2 |
+| `urllib3` | 2.8.0 |
 
 ---
 
@@ -86,7 +99,7 @@ Main libraries: `mcp` (the MCP framework, using FastMCP), `httpx` (sends the web
 1. Install the dependencies:
 
    ```bash
-   uv sync
+   uv sync --locked
    ```
 
 2. Create a file named `.env` in the project folder and add your LIFX token:
@@ -101,6 +114,20 @@ Main libraries: `mcp` (the MCP framework, using FastMCP), `httpx` (sends the web
 
 ## Local testing (`lfxlocalmcp.py`)
 
+Run the automated migration checks with:
+
+```bash
+uv run --locked python -m unittest discover -s tests -v
+```
+
+These checks cover tool discovery, all seven tool calls, invalid arguments, and LIFX failures. They use fake credentials and mocked LIFX requests, and exercise stdio and Streamable HTTP with both legacy and current protocol negotiation. They do not control real lights.
+
+After an intentional dependency update, refresh Docker's requirements with:
+
+```bash
+uv export --locked --no-emit-project -o requirements.txt
+```
+
 `lfxlocalmcp.py` is for testing on your own computer only. Use it to check new tools or fixes with Claude Desktop before you deploy them to the cloud. It isn't meant for everyday use.
 
 Start it to check that it runs:
@@ -114,7 +141,7 @@ To use it from Claude Desktop, add it to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "sta-mcpserver": {
+    "lifx-mcpserver": {
       "command": "uv",
       "args": ["--directory", "/full/path/to/project", "run", "lfxlocalmcp.py"]
     }

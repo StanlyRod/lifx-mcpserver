@@ -4,13 +4,13 @@ import requests
 import asyncio
 import logging
 import os
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from dotenv import load_dotenv
 import lfx_controlers as stc
 
 load_dotenv()
 
-mcp = FastMCP(name="sta-mcpserver")
+mcp = MCPServer(name="lifx-mcpserver", version="0.1.0")
 
 @mcp.tool()
 async def turn_bedroom_light_on(duration: int = 0) -> str:

@@ -1,13 +1,13 @@
 from typing import Any
 import logging
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from dotenv import load_dotenv
 import lfx_controlers as stc
 import sys
 
 load_dotenv()
 
-mcp = FastMCP(name="lifx-mcpserver", host="0.0.0.0", port=3131, stateless_http=True, json_response=True)
+mcp = MCPServer(name="lifx-mcpserver", version="0.1.0")
 
 @mcp.tool()
 async def turn_bedroom_light_on(duration: int = 0) -> str:
@@ -101,7 +101,13 @@ async def set_bulb_color(color: str, bulb_name: str) -> str:
     return response_color
 
 def main():
-    mcp.run(transport="streamable-http")
+    mcp.run(
+        transport="streamable-http",
+        host="0.0.0.0",
+        port=3131,
+        stateless_http=True,
+        json_response=True,
+    )
 
 if __name__ == "__main__":
     try:

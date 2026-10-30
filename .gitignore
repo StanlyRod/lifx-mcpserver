@@ -488,3 +488,5 @@ wheels/
 
 # Environment variable files
 .env
+
+/tests
