@@ -36,6 +36,82 @@ async def close_http_client() -> None:
         _http_client = None
 
 
+# Approximate reference hues for readable descriptions, not an exact API reverse mapping.
+_APPROXIMATE_HUES = {"red": 0, "orange": 36, "yellow": 60, "green": 120, "cyan": 180, "blue": 250, "purple": 280, "pink": 325}
+
+
+def _describe_color(color: dict[str, Any]) -> str | None:
+    """Estimate a readable color description from LIFX values."""
+    hue = color.get("hue")
+    saturation = color.get("saturation")
+    kelvin = color.get("kelvin")
+
+    if saturation is None:
+        return None
+    if saturation < 0.1:
+        return f"white ({kelvin}K)" if kelvin is not None else "white"
+    if hue is None:
+        return None
+
+    hue = hue % 360
+
+    def distance(name: str) -> float:
+        difference = abs(hue - _APPROXIMATE_HUES[name])
+        return min(difference, 360 - difference)
+
+    return min(_APPROXIMATE_HUES, key=distance)
+
+
+async def list_lights_status(only_connected: bool = True) -> list[dict[str, Any]]:
+    """Retrieve the reported state of lights on the LIFX account."""
+    url = "https://api.lifx.com/v1/lights/all"
+    headers = {"Authorization": f"Bearer {lfx}", "Accept": "application/json"}
+
+    try:
+        client = get_http_client()
+        response = await client.get(url, headers=headers)
+        response.raise_for_status()
+        lights = response.json()
+    except httpx.HTTPStatusError as exc:
+        logger.error("LIFX HTTP error while listing lights | status=%s", exc.response.status_code)
+        raise RuntimeError(f"LIFX returned HTTP {exc.response.status_code}.") from None
+    except httpx.TimeoutException:
+        logger.error("LIFX timeout while listing lights")
+        raise RuntimeError("The LIFX request timed out.") from None
+    except httpx.RequestError as exc:
+        logger.error("LIFX network error while listing lights | type=%s", type(exc).__name__)
+        raise RuntimeError("Could not connect to LIFX.") from None
+    except ValueError:
+        logger.error("LIFX returned invalid JSON")
+        raise RuntimeError("LIFX returned invalid JSON.") from None
+
+    if not isinstance(lights, list) or any(not isinstance(light, dict) for light in lights):
+        logger.error("LIFX returned an unexpected lights response")
+        raise RuntimeError("LIFX returned an unexpected response.")
+
+    results = []
+    for light in lights:
+        if only_connected and light.get("connected") is not True:
+            continue
+
+        brightness = light.get("brightness")
+        color = light.get("color") or {}
+        if not isinstance(color, dict):
+            raise RuntimeError("LIFX returned unexpected color information.")
+
+        results.append({
+            "id": light.get("id"),
+            "name": light.get("label"),
+            "connected": light.get("connected"),
+            "power": light.get("power"),
+            "brightness_percent": round(brightness * 100, 1) if brightness is not None else None,
+            "color": {"approximate_name": _describe_color(color), "hue": color.get("hue"), "saturation": color.get("saturation"), "kelvin": color.get("kelvin")},
+        })
+
+    logger.info("Retrieved LIFX light status | count=%s", len(results))
+    return results
+
+
 # Send an asynchronous LIFX request and report failures.
 async def fetch_url(method: str, url: str, headers: dict[str, str], payload: dict[str, Any], bulb_name: str) -> str:
     try:

@@ -48,6 +48,7 @@ Both server files offer the same tools, so a tool that works locally behaves the
 | `toggle_sweep_all_bulbs` | Flips **every** bulb on the account. Lights that are on turn off, and lights that are off turn on. | `duration` (optional) |
 | `set_bulb_brightness` | Sets how bright one bulb is | `intensity` (0–100), `bulb_name` |
 | `set_bulb_color` | Changes the color of one bulb | `color`, `bulb_name` |
+| `get_all_lights_status` | Lists light IDs, names, connectivity, power, brightness, and color without changing any lights | `only_connected` (optional, defaults to `true`) |
 
 **About the inputs**
 
@@ -55,10 +56,11 @@ Both server files offer the same tools, so a tool that works locally behaves the
 - `intensity` is a percentage. `100` is full brightness and `0` is the dimmest. The server converts it to the 0.0–1.0 scale LIFX expects.
 - `color` accepts anything LIFX understands, for example `"red"`, `"blue"`, `"#ff8800"`, `"kelvin:2700"`, or `"hue:120 saturation:1.0 brightness:1.0"`. Changing the color doesn't turn a bulb on, so a bulb that's off stays off.
 - `bulb_name` must match the bulb's label in the LIFX app. The server capitalizes the first letter and lowercases the rest, so `"bedroom"` becomes `Bedroom`. A label like `LivingRoom` would not match, because it becomes `Livingroom`.
+- `only_connected` controls the status listing. The default, `true`, includes connected lights whether on or off. Set it to `false` to also include disconnected lights, whose reported states may be outdated.
 
 **What comes back**
 
-Every tool returns a short sentence:
+The tools that change lights return a short sentence:
 
 | Result | Message |
 |---|---|
@@ -69,6 +71,10 @@ Every tool returns a short sentence:
 | Anything else | `Unexpected error controlling Bedroom.` |
 
 Errors are returned as text rather than crashing the server. Out-of-range inputs, such as a duration of 150, are rejected before any request is sent.
+
+`get_all_lights_status` returns a list of light records containing `id`, `name`, `connected`, `power`, `brightness_percent`, and `color`. The color includes an `approximate_name` alongside the original hue, saturation, and Kelvin values. The name is an estimate, and missing readings are returned as `null`. An off light can still report a nonzero brightness setting. Request failures are returned as MCP tool errors.
+
+For example, ask your assistant "Which lights are on?" or "Show the brightness and color of all my connected lights." The status tool reads information without changing power, brightness, or color.
 
 ---
 
@@ -123,7 +129,7 @@ Clone this repository and open the project folder, then:
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-These checks cover tool discovery, all seven tool calls, invalid arguments, and LIFX failures. They use fake credentials and mocked LIFX requests, and exercise stdio and Streamable HTTP with both legacy and current protocol negotiation. They do not control real lights.
+These checks cover tool discovery, all eight tool calls, invalid arguments, and LIFX failures. They use fake credentials and mocked LIFX requests, and exercise stdio and Streamable HTTP with both legacy and current protocol negotiation. They do not control real lights.
 
 After an intentional dependency update, refresh Docker's requirements with:
 

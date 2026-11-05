@@ -1,6 +1,7 @@
 from typing import Any
 import logging
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 from dotenv import load_dotenv
 import lfx_controlers as stc
 import sys
@@ -99,6 +100,29 @@ async def set_bulb_color(color: str, bulb_name: str) -> str:
 
     response_color = await stc.bulb_color(color, bulb_name)
     return response_color
+
+@mcp.tool()
+async def get_all_lights_status(only_connected: bool = True) -> list[dict[str, Any]]:
+    """List LIFX lights with power, brightness, and color information.
+
+    Use when the user asks which lights are available, which lights are on
+    or off, or what brightness and color the lights have.
+
+    Returns each light's ID, name, connectivity, power state, brightness
+    percentage, approximate color name, and raw color values.
+
+    only_connected: Include only connected lights by default, whether on
+    or off. Set False to include disconnected lights, whose reported
+    states may be outdated.
+
+    Color names are estimates. Brightness is the configured level and may
+    be nonzero even when a light is off. This tool only reads information.
+    """
+    try:
+        return await stc.list_lights_status(only_connected=only_connected)
+    except RuntimeError as exc:
+        raise ToolError(str(exc)) from None
+
 
 def main():
     mcp.run(
